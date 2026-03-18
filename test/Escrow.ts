@@ -40,6 +40,6 @@ describe("Escrow", () => {
 
     // assertion
     const scrowAddr = await escrow.nftAddress();
-    expect(scrowAddr).to.be.equal(realEstateAddr);
+    expect(scrowAddr).to.be.equal(realEstateAddr); //33:54
   });
 });
