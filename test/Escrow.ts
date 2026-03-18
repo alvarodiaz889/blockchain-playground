@@ -9,20 +9,37 @@ const tokens = (n: number | string): bigint => {
 };
 
 describe("Escrow", () => {
+  let buyer, seller, inspector, lender;
+  let realEstate, escrow;
   it("saves the addresses", async () => {
-    // 1. Get the Contract Factory
-    // NOTE: Match the string exactly to your .sol filename or contract name
+    //setup accounts
+    [buyer, seller, inspector, lender] = await ethers.getSigners();
+
+    // deploy contract
     const RealEstateFactory = await ethers.getContractFactory("RealEstate");
+    realEstate = await RealEstateFactory.deploy();
 
-    // 2. Deploy the contract
-    const realEstate = await RealEstateFactory.deploy();
+    // printing contract address. In ethers v6, use getAddress() instead of .address
+    const realEstateAddr = await realEstate.getAddress();
+    console.log(`Deployed RealEstate to: ${realEstateAddr}`);
 
-    // 3. In ethers v6, use getAddress() instead of .address
-    const address = await realEstate.getAddress();
+    // mint
+    let transaction = await realEstate.mintProperty(
+      "https://images.bayut.com/thumbnails/810064744-800x600.webp",
+    );
+    await transaction.wait();
 
-    console.log(`Deployed RealEstate to: ${address}`);
+    // scrow
+    const EscrowFactory = await ethers.getContractFactory("Escrow");
+    escrow = await EscrowFactory.deploy(
+      realEstateAddr,
+      await seller.getAddress(),
+      await lender.getAddress(),
+      await inspector.getAddress(),
+    );
 
-    // 4. Assertion
-    expect(address).to.be.properAddress;
+    // assertion
+    const scrowAddr = await escrow.nftAddress();
+    expect(scrowAddr).to.be.equal(realEstateAddr);
   });
 });

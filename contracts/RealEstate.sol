@@ -10,14 +10,14 @@ contract RealEstate is ERC721, ERC721URIStorage, Ownable {
 
     constructor() ERC721("RealEstate", "REST") Ownable(msg.sender) {}
 
-    function mintProperty(address to, string memory uri) public onlyOwner {
+    function mintProperty(string memory uri) public onlyOwner {
         // 2. Use the current value as the ID
         uint256 tokenId = _nextTokenId;
 
         // 3. Increment manually (uses less gas than the old library)
         _nextTokenId++;
 
-        _safeMint(to, tokenId);
+        _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, uri);
     }
 
