@@ -1,0 +1,6 @@
+npx hardhat compile
+npx hardhat test
+
+Deletes the artifacts/ folder (where the JSON ABIs live).
+Deletes the cache/ folder.
+npx hardhat clean
