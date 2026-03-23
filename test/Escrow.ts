@@ -11,19 +11,38 @@ const tokens = (n: number | string): bigint => {
 describe("Escrow", () => {
   let deployer: any, buyer: any, seller: any, inspector: any, lender: any;
   let realEstate: any, escrow: any;
+  let deployerAddr: any,
+    sellerAddr: any,
+    buyerAddr: any,
+    lenderAddr: any,
+    inspectorAddr: any;
+
   const nftId = 0;
-  const price = ethers.parseEther("10");
-  const escrowAmount = ethers.parseEther("5");
+  const propertyPrice = ethers.parseEther("10");
+  const downPayment = ethers.parseEther("5");
   const listingFee = ethers.parseEther("0");
   const lendingAmount = ethers.parseEther("5");
+  const defaultProperty = {
+    id: nftId,
+    propertyPrice,
+    downPayment,
+    accountBalance: 0,
+    buyer: ethers.ZeroAddress,
+    seller: ethers.ZeroAddress,
+    lender: ethers.ZeroAddress,
+    inspector: ethers.ZeroAddress,
+    isListed: false,
+    inspectionPassed: false,
+  };
 
   beforeEach(async () => {
     //setup accounts
     [deployer, buyer, seller, inspector, lender] = await ethers.getSigners();
-    const deployerAddr = await deployer.getAddress();
-    const sellerAddr = await seller.getAddress();
-    const inspectorAddr = await inspector.getAddress();
-    const lenderAddr = await lender.getAddress();
+    deployerAddr = await deployer.getAddress();
+    sellerAddr = await seller.getAddress();
+    buyerAddr = await buyer.getAddress();
+    lenderAddr = await lender.getAddress();
+    inspectorAddr = await inspector.getAddress();
 
     // deploy contract
     const RealEstateFactory = await ethers.getContractFactory("RealEstate");
@@ -45,27 +64,21 @@ describe("Escrow", () => {
 
     // scrow deployment
     const EscrowFactory = await ethers.getContractFactory("Escrow");
-    escrow = await EscrowFactory.deploy(
-      await realEstate.getAddress(),
-      sellerAddr,
-      lenderAddr,
-      inspectorAddr,
-    );
+    escrow = await EscrowFactory.deploy(await realEstate.getAddress());
     await escrow.waitForDeployment();
 
-    const escrowAddr = await escrow.getAddress();
     // The Seller must "Approve" the Escrow contract to take the NFT
+    const escrowAddr = await escrow.getAddress();
     transaction = await realEstate.connect(seller).approve(escrowAddr, nftId);
     await transaction.wait();
 
     // Now the list function can successfully "transferFrom"
     const propertyInfo = {
-      id: nftId,
-      buyer: await buyer.getAddress(),
-      price,
-      escrowAmount,
-      isListed: false,
-      inspectionPassed: false,
+      ...defaultProperty,
+      buyer: buyerAddr,
+      seller: sellerAddr,
+      inspector: inspectorAddr,
+      lender: lenderAddr,
     };
 
     transaction = await escrow
@@ -79,21 +92,6 @@ describe("Escrow", () => {
       const result = await escrow.nftAddress();
       expect(result).to.be.equal(await realEstate.getAddress());
     });
-
-    it("Returns seller", async () => {
-      const result = await escrow.seller();
-      expect(result).to.be.equal(await seller.getAddress());
-    });
-
-    it("Returns inspector", async () => {
-      const result = await escrow.inspector();
-      expect(result).to.be.equal(await inspector.getAddress());
-    });
-
-    it("Returns lender", async () => {
-      const result = await escrow.lender();
-      expect(result).to.be.equal(await lender.getAddress());
-    });
   });
 
   describe("listing", () => {
@@ -105,16 +103,22 @@ describe("Escrow", () => {
     it("Property info is valid", async () => {
       const {
         id: _id,
-        price: _price,
-        escrowAmount: _escrowAmount,
+        propertyPrice: _propertyPrice,
+        downPayment: _downPayment,
         buyer: _buyer,
+        seller: _seller,
+        lender: _lender,
+        inspector: _inspector,
         isListed: _isListed,
       } = await escrow.propertyInfo(nftId);
 
       expect(_id).to.be.equal(nftId);
-      expect(_price).to.be.equal(price);
-      expect(_escrowAmount).to.be.equal(escrowAmount);
-      expect(_buyer).to.be.equal(await buyer.getAddress());
+      expect(_propertyPrice).to.be.equal(propertyPrice);
+      expect(_downPayment).to.be.equal(downPayment);
+      expect(_buyer).to.be.equal(buyerAddr);
+      expect(_seller).to.be.equal(sellerAddr);
+      expect(_lender).to.be.equal(lenderAddr);
+      expect(_inspector).to.be.equal(inspectorAddr);
       expect(_isListed).to.be.true;
     });
 
@@ -128,13 +132,11 @@ describe("Escrow", () => {
 
     it("Fails if someone other than the seller tries to list", async () => {
       const propertyInfo = {
-        id: nftId,
-        buyer: await buyer.getAddress(),
-        price,
-        seller: await seller.getAddress(),
-        escrowAmount,
-        isListed: false,
-        inspectionPassed: false,
+        ...defaultProperty,
+        buyer: buyerAddr,
+        seller: sellerAddr,
+        inspector: inspectorAddr,
+        lender: lenderAddr,
       };
 
       await expect(
@@ -144,14 +146,14 @@ describe("Escrow", () => {
   });
 
   describe("Desposits", () => {
-    it("Should validate Earnest", async () => {
+    it("Should validate Down payment", async () => {
       let transaction = await escrow
         .connect(buyer)
-        .depositEarnest(nftId, { value: escrowAmount });
+        .depositDownPayment(nftId, { value: downPayment });
       await transaction.wait();
 
       const balance = await escrow.getBalance();
-      expect(balance).to.greaterThanOrEqual(escrowAmount);
+      expect(balance).to.greaterThanOrEqual(downPayment);
     });
   });
 
@@ -197,11 +199,37 @@ describe("Escrow", () => {
     });
   });
 
+  describe("Lending", () => {
+    beforeEach(async () => {
+      let transaction = await escrow
+        .connect(buyer)
+        .depositDownPayment(nftId, { value: downPayment });
+      await transaction.wait();
+
+      transaction = await escrow
+        .connect(lender)
+        .depositLendingAmount(nftId, { value: lendingAmount });
+      await transaction.wait();
+    });
+
+    it("Lender add funds to contract", async () => {
+      const contractBalance = await escrow.getBalance();
+      expect(contractBalance).to.be.greaterThanOrEqual(propertyPrice);
+    });
+
+    it("Updates property balance", async () => {
+      const { accountBalance: _accountBalance } = await escrow.propertyInfo(
+        nftId,
+      );
+      expect(_accountBalance).to.be.equal(propertyPrice);
+    });
+  });
+
   describe("Sale", () => {
     beforeEach(async () => {
       let transaction = await escrow
         .connect(buyer)
-        .depositEarnest(nftId, { value: escrowAmount });
+        .depositDownPayment(nftId, { value: downPayment });
       await transaction.wait();
 
       transaction = await escrow
@@ -215,24 +243,25 @@ describe("Escrow", () => {
       transaction = await escrow.connect(seller).approveSale(nftId);
       await transaction.wait();
 
-      transaction = await escrow.connect(lender).approveSale(nftId);
+      transaction = await escrow
+        .connect(lender)
+        .depositLendingAmount(nftId, { value: lendingAmount });
       await transaction.wait();
 
-      await lender.sendTransaction({
-        to: escrow.address,
-        value: lendingAmount,
-      });
+      transaction = await escrow.connect(lender).approveSale(nftId);
+      await transaction.wait();
 
       transaction = await escrow.connect(seller).finalizeSale(nftId);
       await transaction.wait();
     });
 
-    it("Updates ownership", async () => {
+    it("Updates ownership to buyer", async () => {
       expect(await realEstate.ownerOf(nftId)).to.be.equal(buyer.address);
     });
 
-    it("Updates balance", async () => {
-      expect(await escrow.getBalance()).to.be.equal(0);
+    it("Updates balance of selelr", async () => {
+      const balance = await ethers.provider.getBalance(sellerAddr);
+      expect(balance).to.be.greaterThanOrEqual(propertyPrice);
     });
   });
 });

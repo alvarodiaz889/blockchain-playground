@@ -21,37 +21,28 @@ contract Escrow {
 
     address public nftAddress;
     mapping(uint256 => PropertyInfo) public propertyInfo;
-    mapping(uint256 => mapping(address => bool)) approvals;
+    mapping(uint256 => mapping(address => bool)) public approvals;
 
-    modifier onlySeller(uint256 _nftId) {
-        require(
-            msg.sender == propertyInfo[_nftId].seller,
-            "Only seller can call this method"
-        );
+    modifier onlySeller(address _seller) {
+        require(msg.sender == _seller, "Only seller can call this method");
         _;
     }
 
-    modifier onlyBuyer(uint256 _nftId) {
-        require(
-            msg.sender == propertyInfo[_nftId].buyer,
-            "Only buyer can call this method"
-        );
+    modifier onlyBuyer(address _buyer) {
+        require(msg.sender == _buyer, "Only buyer can call this method");
         _;
     }
 
-    modifier onlyInspector(uint256 _nftId) {
+    modifier onlyInspector(address _inspector) {
         require(
-            msg.sender == propertyInfo[_nftId].inspector,
+            msg.sender == _inspector,
             "Only inspector can call this method"
         );
         _;
     }
 
-    modifier onlyLender(uint256 _nftId) {
-        require(
-            msg.sender == propertyInfo[_nftId].lender,
-            "Only lender can call this method"
-        );
+    modifier onlyLender(address _lender) {
+        require(msg.sender == _lender, "Only lender can call this method");
         _;
     }
 
@@ -61,7 +52,7 @@ contract Escrow {
 
     function list(
         PropertyInfo memory _info
-    ) public payable onlySeller(_info.id) {
+    ) public payable onlySeller(_info.seller) {
         IERC721(nftAddress).transferFrom(msg.sender, address(this), _info.id);
         propertyInfo[_info.id] = _info;
         propertyInfo[_info.id].isListed = true;
@@ -69,7 +60,7 @@ contract Escrow {
 
     function depositDownPayment(
         uint256 _nftId
-    ) public payable onlyBuyer(_nftId) {
+    ) public payable onlyBuyer(propertyInfo[_nftId].buyer) {
         require(msg.value >= propertyInfo[_nftId].downPayment);
         propertyInfo[_nftId].accountBalance = msg.value;
     }
@@ -77,16 +68,17 @@ contract Escrow {
     function updateInspectionStatus(
         uint256 _nftId,
         bool _passed
-    ) public onlyInspector(_nftId) {
+    ) public onlyInspector(propertyInfo[_nftId].inspector) {
         propertyInfo[_nftId].inspectionPassed = _passed;
     }
 
     function depositLendingAmount(
         uint256 _nftId
-    ) public payable onlyBuyer(_nftId) {
+    ) public payable onlyLender(propertyInfo[_nftId].lender) {
         require(
             msg.value + propertyInfo[_nftId].accountBalance >=
-                propertyInfo[_nftId].propertyPrice
+                propertyInfo[_nftId].propertyPrice,
+            "Not enough money"
         );
         propertyInfo[_nftId].accountBalance += msg.value;
     }
