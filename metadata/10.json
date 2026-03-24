@@ -1,0 +1,15 @@
+{
+  "id": "10",
+  "name": "Berlin Industrial Studio",
+  "address": "Torstraße 1, 10119 Berlin, Germany",
+  "description": "Converted warehouse in the heart of Mitte",
+  "image": "../images/10.jpg",
+  "attributes": [
+    { "trait_type": "Purchase Price", "value": 8 },
+    { "trait_type": "Type of Residence", "value": "Studio" },
+    { "trait_type": "Bed Rooms", "value": 1 },
+    { "trait_type": "Bathrooms", "value": 1 },
+    { "trait_type": "Square Feet", "value": 950 },
+    { "trait_type": "Year Built", "value": 1910 }
+  ]
+}

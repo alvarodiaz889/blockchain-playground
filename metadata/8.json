@@ -1,0 +1,15 @@
+{
+  "id": "8",
+  "name": "Miami Beach Manor",
+  "address": "44 Star Island Dr, Miami Beach, FL 33139",
+  "description": "Exclusive island mansion with private dock",
+  "image": "../images/8.jpg",
+  "attributes": [
+    { "trait_type": "Purchase Price", "value": 40 },
+    { "trait_type": "Type of Residence", "value": "Mansion" },
+    { "trait_type": "Bed Rooms", "value": 8 },
+    { "trait_type": "Bathrooms", "value": 10 },
+    { "trait_type": "Square Feet", "value": 12000 },
+    { "trait_type": "Year Built", "value": 2023 }
+  ]
+}

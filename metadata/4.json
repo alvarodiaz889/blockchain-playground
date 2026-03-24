@@ -1,0 +1,15 @@
+{
+  "id": "4",
+  "name": "Tokyo Skyline Loft",
+  "address": "1-1-1 Roppongi, Minato City, Tokyo, Japan",
+  "description": "Minimalist loft with views of the Tokyo Tower",
+  "image": "../images/4.jpg",
+  "attributes": [
+    { "trait_type": "Purchase Price", "value": 12 },
+    { "trait_type": "Type of Residence", "value": "Loft" },
+    { "trait_type": "Bed Rooms", "value": 1 },
+    { "trait_type": "Bathrooms", "value": 1 },
+    { "trait_type": "Square Feet", "value": 1100 },
+    { "trait_type": "Year Built", "value": 2021 }
+  ]
+}

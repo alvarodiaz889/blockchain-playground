@@ -1,0 +1,15 @@
+{
+  "id": "5",
+  "name": "Parisian Chic Apartment",
+  "address": "45 Avenue Montaigne, 75008 Paris, France",
+  "description": "Elegant apartment in the Golden Triangle",
+  "image": "../images/5.jpg",
+  "attributes": [
+    { "trait_type": "Purchase Price", "value": 18 },
+    { "trait_type": "Type of Residence", "value": "Apartment" },
+    { "trait_type": "Bed Rooms", "value": 3 },
+    { "trait_type": "Bathrooms", "value": 2 },
+    { "trait_type": "Square Feet", "value": 1950 },
+    { "trait_type": "Year Built", "value": 1925 }
+  ]
+}

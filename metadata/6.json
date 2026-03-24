@@ -1,0 +1,15 @@
+{
+  "id": "6",
+  "name": "Dubai Marina Estate",
+  "address": "Marina Gate II, Dubai Marina, UAE",
+  "description": "High-floor luxury living with marina access",
+  "image": "../images/6.jpg",
+  "attributes": [
+    { "trait_type": "Purchase Price", "value": 10 },
+    { "trait_type": "Type of Residence", "value": "Penthouse" },
+    { "trait_type": "Bed Rooms", "value": 3 },
+    { "trait_type": "Bathrooms", "value": 4 },
+    { "trait_type": "Square Feet", "value": 3200 },
+    { "trait_type": "Year Built", "value": 2019 }
+  ]
+}

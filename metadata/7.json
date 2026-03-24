@@ -1,0 +1,15 @@
+{
+  "id": "7",
+  "name": "Alpine Ski Chalet",
+  "address": "Route de Médran, 1936 Bagnes, Switzerland",
+  "description": "Ski-in/ski-out chalet in Verbier",
+  "image": "../images/7.jpg",
+  "attributes": [
+    { "trait_type": "Purchase Price", "value": 30 },
+    { "trait_type": "Type of Residence", "value": "Chalet" },
+    { "trait_type": "Bed Rooms", "value": 6 },
+    { "trait_type": "Bathrooms", "value": 6 },
+    { "trait_type": "Square Feet", "value": 5500 },
+    { "trait_type": "Year Built", "value": 2015 }
+  ]
+}

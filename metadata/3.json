@@ -1,0 +1,15 @@
+{
+  "id": "3",
+  "name": "London Heritage House",
+  "address": "12 Kensington Palace Gardens, London, UK",
+  "description": "Classic Victorian architecture in a prime location",
+  "image": "../images/3.jpg",
+  "attributes": [
+    { "trait_type": "Purchase Price", "value": 25 },
+    { "trait_type": "Type of Residence", "value": "Townhouse" },
+    { "trait_type": "Bed Rooms", "value": 5 },
+    { "trait_type": "Bathrooms", "value": 5 },
+    { "trait_type": "Square Feet", "value": 3800 },
+    { "trait_type": "Year Built", "value": 1890 }
+  ]
+}

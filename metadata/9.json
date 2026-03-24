@@ -1,0 +1,15 @@
+{
+  "id": "9",
+  "name": "Sydney Harbour Suite",
+  "address": "1 Macquarie St, Sydney, NSW 2000, Australia",
+  "description": "Opera House views from every window",
+  "image": "../images/9.jpg",
+  "attributes": [
+    { "trait_type": "Purchase Price", "value": 22 },
+    { "trait_type": "Type of Residence", "value": "Condo" },
+    { "trait_type": "Bed Rooms", "value": 2 },
+    { "trait_type": "Bathrooms", "value": 2 },
+    { "trait_type": "Square Feet", "value": 1600 },
+    { "trait_type": "Year Built", "value": 2010 }
+  ]
+}
