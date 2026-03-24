@@ -4,3 +4,12 @@ npx hardhat test
 Deletes the artifacts/ folder (where the JSON ABIs live).
 Deletes the cache/ folder.
 npx hardhat clean
+
+To deploy
+local: npx hardhat node to run local blockchain
+in terminal 2: npx hardhat run deploy/deploy.ts --network localhost
+web app: pnpm run dev
+
+copy abis from artifact/contract to src folder
+
+add config.json with chain id 31337 and contract addresses

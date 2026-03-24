@@ -1,121 +1,117 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { ethers } from "ethers";
+import "./App.css";
+import { useCallback, useEffect, useState } from "react";
+import logo from "./assets/logo.svg";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [account, setAccount] = useState<any>(null);
+  const [provider, setProvider] = useState<any>(null);
+
+  // Use useCallback so the function doesn't change on every render
+  const loadData = useCallback(async () => {
+    try {
+      if (window.ethereum) {
+        const browserProvider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await browserProvider.getSigner();
+        const address = await signer.getAddress();
+
+        setProvider(browserProvider);
+        setAccount(address);
+        console.log("Connected:", address);
+      } else {
+        const defaultProvider = ethers.getDefaultProvider();
+        setProvider(defaultProvider);
+        console.log("MetaMask not found, using read-only.");
+      }
+    } catch (error) {
+      console.error("User denied account access or error occurred:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    // 1. Load initial data
+    loadData();
+
+    // 2. Setup the listener
+    if (window.ethereum) {
+      const handleAccountsChanged = (accounts: any) => {
+        if (accounts.length > 0) {
+          console.log("Account changed, reloading data...", accounts);
+          loadData(); // Re-run the main loader to get the new signer
+        } else {
+          setAccount(null);
+        }
+      };
+
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
+
+      // 3. CLEANUP: This prevents memory leaks and multiple listeners
+      return () => {
+        window.ethereum.removeListener(
+          "accountsChanged",
+          handleAccountsChanged,
+        );
+      };
+    }
+  }, [loadData]);
+
+  const connectHandler = async () => {
+    try {
+      if (provider) {
+        // In v6, ethers.providers.Web3Provider becomes ethers.BrowserProvider
+        // const provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await window.ethereum.request({
+          method: "eth_accounts",
+        });
+        const [currentAccount] = accounts;
+        console.log(accounts);
+
+        currentAccount && setAccount(currentAccount);
+      } else {
+        console.log("Please install any provider!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
+    <div className="flex flex-col w-full">
+      <div className="flex inline-flex justify-between p-6">
+        <nav>
+          <ul className="flex inline-flex gap-3">
             <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
+              <a href="#">Buy</a>
             </li>
             <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
+              <a href="#">Rent</a>
+            </li>
+            <li>
+              <a href="#">Sell</a>
             </li>
           </ul>
+        </nav>
+        <div className="flex">
+          <img src={logo} width="80" height="60" alt="logo"></img>
+          <label className="text-violet-600 text-3xl font-[700]">Millow</label>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {account ? (
+          <button
+            className="bg-violet-600 text-white rounded-lg p-2"
+            type="button"
+          >{`${account.slice(0, 6)}...${account.slice(38, 42)}`}</button>
+        ) : (
+          <button
+            className="bg-violet-600 text-white rounded-lg p-2"
+            type="button"
+            onClick={connectHandler}
+          >
+            Connect
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
