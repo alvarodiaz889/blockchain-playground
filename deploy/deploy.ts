@@ -7,16 +7,6 @@ async function main() {
 
   const deployerAddr = await deployer.getAddress();
   const sellerAddr = await seller.getAddress();
-  const buyerAddr = await buyer.getAddress();
-  const lenderAddr = await lender.getAddress();
-  const inspectorAddr = await inspector.getAddress();
-  const images = [
-    "810064740",
-    "810064741",
-    "810064742",
-    "810064743",
-    "810064744",
-  ];
 
   console.log("Deploying Real State contract...");
   // deploy contract real
@@ -36,9 +26,9 @@ async function main() {
   console.log(`✅ Escrow deployed to: ${escrowAddr}`);
 
   // mint properties
-  images.forEach(async (img, nftId) => {
+  for (let nftId = 0; nftId < 10; nftId++) {
     let transaction = await realEstate.mintProperty(
-      `https://images.bayut.com/thumbnails/${img}-800x600.webp`,
+      `https://alvarodiaz889.github.io/blockchain-playground/metadata/${nftId + 1}.json`,
     );
     await transaction.wait();
 
@@ -53,7 +43,7 @@ async function main() {
     // The Seller must "Approve" the Escrow contract to take the NFT
     transaction = await realEstate.connect(seller).approve(escrowAddr, nftId);
     await transaction.wait();
-  });
+  }
 
   console.log(`✅ Deployment Done!`);
 }

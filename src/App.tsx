@@ -1,93 +1,127 @@
 import { ethers } from "ethers";
 import "./App.css";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "./components/Header";
 // ABIs
 import Escrow from "./abis/Escrow.json";
-import RealState from "./abis/RealState.json";
+import RealEstate from "./abis/RealEstate.json";
 // Config
 import config from "./config.json";
+import type { PropertyMetadata } from "./customTypes/Property";
 
 function App() {
   const [account, setAccount] = useState<any>(null);
-  const [provider, setProvider] = useState<any>(null);
-  const [escrowContract, setEscrowContract] = useState<any>(null);
+  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
+  const [escrowContract, setEscrowContract] = useState<ethers.Contract | null>(
+    null,
+  );
+  const [realEstateContract, setRealEstateContract] =
+    useState<ethers.Contract | null>(null);
+  const [properties, setProperties] = useState<PropertyMetadata[]>([]);
 
-  // Use useCallback so the function doesn't change on every render
-  const loadAccount = useCallback(async () => {
-    try {
-      if (window.ethereum && provider) {
-        const signer = await provider.getSigner();
-        const address = await signer.getAddress();
-
-        setAccount(address);
-        console.log("Connected:", address);
-      }
-    } catch (error) {
-      console.error("User denied account access or error occurred:", error);
-    }
-  }, []);
-
+  // Initialize the provider once on mount
   useEffect(() => {
     if (window.ethereum) {
-      const fetchData = async () => {
-        const browserProvider = new ethers.BrowserProvider(window.ethereum);
-        setProvider(browserProvider);
-
-        const network = await browserProvider.getNetwork();
-        const chainIdStr = network.chainId.toString();
-        const networkConfig = (config as Record<string, any>)[chainIdStr];
-
-        console.log(config, chainIdStr, networkConfig);
-        if (networkConfig) {
-          const realStateAddr = networkConfig.realEstate.address;
-          const scrowAddr = networkConfig.escrow.address;
-
-          const realStateCtr = new ethers.Contract(
-            realStateAddr, //contract deployed address
-            RealState, //abi
-            browserProvider,
-          );
-
-          const totalSupply = await realStateCtr.totalSupply();
-          console.log("totalSupply ==>", totalSupply);
-
-          const escrowCtr = new ethers.Contract(
-            scrowAddr,
-            RealState,
-            browserProvider,
-          );
-          setEscrowContract(escrowCtr);
-        }
-      };
-
-      fetchData();
-
-      // Adding account change handler
-      const handleAccountsChanged = (accounts: any) => {
-        if (accounts.length > 0) {
-          console.log("Account changed, reloading data...", accounts);
-          loadAccount();
-        } else {
-          setAccount(null);
-        }
-      };
-
-      window.ethereum.on("accountsChanged", handleAccountsChanged);
-
-      // CLEANUP: This prevents memory leaks and multiple listeners
-      return () => {
-        window.ethereum.removeListener(
-          "accountsChanged",
-          handleAccountsChanged,
-        );
-      };
+      const browserProvider = new ethers.BrowserProvider(window.ethereum);
+      setProvider(browserProvider);
+    } else {
+      console.log("Metamask is not installed!");
     }
   }, []);
+
+  // Use the stored provider to get the account when the button is clicked
+  const connectHandler = async () => {
+    if (!provider) return;
+
+    try {
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      setAccount(address);
+    } catch (error) {
+      console.error("Connection failed:", error);
+    }
+  };
+
+  const loadData = async () => {
+    if (!provider) return;
+
+    const network = await provider.getNetwork();
+    const chainIdStr = network.chainId.toString();
+    const networkConfig = (config as Record<string, any>)[chainIdStr];
+
+    if (networkConfig) {
+      // Re-use the same provider instance here
+      const realStateCtr = new ethers.Contract(
+        networkConfig.realEstate.address,
+        RealEstate,
+        provider,
+      );
+
+      const escrowCtr = new ethers.Contract(
+        networkConfig.escrow.address,
+        Escrow,
+        provider,
+      );
+
+      setRealEstateContract(realStateCtr);
+      setEscrowContract(escrowCtr);
+
+      const totalSupply = await realStateCtr.totalSupply();
+      console.log("totalSupply ==>", totalSupply);
+
+      const properties: PropertyMetadata[] = [];
+      for (let nftId = 0; nftId < totalSupply; nftId++) {
+        const uri = await realStateCtr.tokenURI(nftId);
+        const response = await fetch(uri);
+        const metadata = await response.json();
+        properties.push(metadata);
+      }
+
+      setProperties(properties);
+    }
+  };
+
+  useEffect(() => {
+    if (!provider) return;
+
+    // Load the initial contract data
+    loadData();
+
+    // Define the account change handler
+    const handleAccountsChanged = async (accounts: string[]) => {
+      if (accounts.length > 0) {
+        // Re-run the account loader to update the UI
+        const signer = await provider.getSigner();
+        setAccount(await signer.getAddress());
+      } else {
+        setAccount(null);
+      }
+    };
+
+    // Define the chain change handler (Crucial for Hardhat testing)
+    const handleChainChanged = () => {
+      window.location.reload();
+    };
+
+    // Attach listeners
+    window.ethereum.on("accountsChanged", handleAccountsChanged);
+    window.ethereum.on("chainChanged", handleChainChanged);
+
+    // CLEANUP: Remove them if the component unmounts or provider changes
+    return () => {
+      window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+      window.ethereum.removeListener("chainChanged", handleChainChanged);
+    };
+  }, [provider]);
 
   return (
     <div className="flex flex-col w-full">
-      <Header account={account} connectHandler={loadAccount} />
+      <Header account={account} connectHandler={connectHandler} />
+      <div>
+        {properties.map((p) => (
+          <p key={`p-${p.id}`}>{`${p.id} - ${p.name}`}</p>
+        ))}
+      </div>
     </div>
   );
 }
