@@ -8,6 +8,7 @@ import RealEstate from "./abis/RealEstate.json";
 // Config
 import config from "./config.json";
 import type { PropertyMetadata } from "./customTypes/Property";
+import PropertyList from "./components/PpropertyList";
 
 function App() {
   const [account, setAccount] = useState<any>(null);
@@ -117,11 +118,7 @@ function App() {
   return (
     <div className="flex flex-col w-full">
       <Header account={account} connectHandler={connectHandler} />
-      <div>
-        {properties.map((p) => (
-          <p key={`p-${p.id}`}>{`${p.id} - ${p.name}`}</p>
-        ))}
-      </div>
+      <PropertyList properties={properties} />
     </div>
   );
 }
