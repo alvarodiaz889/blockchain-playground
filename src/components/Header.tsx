@@ -1,11 +1,11 @@
 import logo from "../assets/logo.svg";
 
 interface HeaderProps {
-  account: any;
-  connectHandler: () => void;
+  account: string | null;
+  onConnect: () => void;
 }
 
-const Header = ({ account, connectHandler }: HeaderProps) => {
+const Header = ({ account, onConnect }: HeaderProps) => {
   return (
     <div className="flex inline-flex justify-between p-6">
       <nav>
@@ -34,7 +34,7 @@ const Header = ({ account, connectHandler }: HeaderProps) => {
         <button
           className="bg-violet-600 text-white rounded-lg p-2"
           type="button"
-          onClick={connectHandler}
+          onClick={onConnect}
         >
           Connect
         </button>

@@ -8,10 +8,11 @@ import RealEstate from "./abis/RealEstate.json";
 // Config
 import config from "./config.json";
 import type { PropertyMetadata } from "./customTypes/Property";
-import PropertyList from "./components/PpropertyList";
+import PropertyList from "./components/PropertyList";
+import PurchaseModal from "./components/PurchaseModal";
 
 function App() {
-  const [account, setAccount] = useState<any>(null);
+  const [account, setAccount] = useState<string | null>(null);
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [escrowContract, setEscrowContract] = useState<ethers.Contract | null>(
     null,
@@ -19,6 +20,7 @@ function App() {
   const [realEstateContract, setRealEstateContract] =
     useState<ethers.Contract | null>(null);
   const [properties, setProperties] = useState<PropertyMetadata[]>([]);
+  const [property, setProperty] = useState<PropertyMetadata | null>(null);
 
   // Initialize the provider once on mount
   useEffect(() => {
@@ -29,19 +31,6 @@ function App() {
       console.log("Metamask is not installed!");
     }
   }, []);
-
-  // Use the stored provider to get the account when the button is clicked
-  const connectHandler = async () => {
-    if (!provider) return;
-
-    try {
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      setAccount(address);
-    } catch (error) {
-      console.error("Connection failed:", error);
-    }
-  };
 
   const loadData = async () => {
     if (!provider) return;
@@ -115,10 +104,34 @@ function App() {
     };
   }, [provider]);
 
+  // Use the stored provider to get the account when the button is clicked
+  const handleConnect = async () => {
+    if (!provider) return;
+
+    try {
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      setAccount(address);
+    } catch (error) {
+      console.error("Connection failed:", error);
+    }
+  };
+
+  const handleSelected = (prop: PropertyMetadata) => {
+    console.log("Selected Property =>", prop);
+    setProperty(prop);
+  };
+  const handleSubmit = () => {};
+
   return (
     <div className="flex flex-col w-full">
-      <Header account={account} connectHandler={connectHandler} />
-      <PropertyList properties={properties} />
+      <Header account={account} onConnect={handleConnect} />
+      <PropertyList properties={properties} onSelected={handleSelected} />
+      <PurchaseModal
+        property={property}
+        onClose={() => setProperty(null)}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }

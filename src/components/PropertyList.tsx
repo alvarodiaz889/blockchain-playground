@@ -1,11 +1,16 @@
 import type { PropertyMetadata } from "../customTypes/Property";
 
-const PropertyList = ({ properties }: { properties: PropertyMetadata[] }) => (
+interface PropertyListProps {
+  properties: PropertyMetadata[];
+  onSelected: (prop: PropertyMetadata) => void;
+}
+const PropertyList = ({ properties, onSelected }: PropertyListProps) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
     {properties.map((property, index) => (
       <div
         key={index}
         className="aspect-square w-full bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow"
+        onClick={() => onSelected(property)}
       >
         {/* Image Section */}
         <div className="h-2/3 w-full relative">
