@@ -1,13 +1,28 @@
-import { useRef } from "react";
-import type { PropertyMetadata } from "../customTypes/Property";
+import { useEffect, useRef } from "react";
+import type { PropertyMetadata, RoleType } from "../customTypes/Property";
 
 interface IModalProps {
   property: PropertyMetadata | null;
+  role: RoleType | null;
   onSubmit: () => void;
   onClose: () => void;
 }
-const PurchaseModal = ({ property, onSubmit, onClose }: IModalProps) => {
+const PurchaseModal = ({ property, role, onSubmit, onClose }: IModalProps) => {
+  useEffect(() => {
+    console.log("role ==>", role);
+  }, [role]);
+
   const isOpen = property !== null;
+  const actionName =
+    role === "buyer"
+      ? "Buy Property"
+      : role === "seller"
+        ? "Approve sell"
+        : role === "inspector"
+          ? "Approve inspection"
+          : role === "lender"
+            ? "Deposit and Approve"
+            : "Not Authorized";
 
   // 1. Create a reference for the Modal Content box
   const modalRef = useRef<HTMLDivElement>(null);
@@ -43,8 +58,8 @@ const PurchaseModal = ({ property, onSubmit, onClose }: IModalProps) => {
                 />
               </div>
               <div className="flex flex-col p-4">
-                {property.attributes.map((attr) => (
-                  <div className="inline-flex gap-2">
+                {property.attributes.map((attr, idx) => (
+                  <div key={`prop-${idx}`} className="inline-flex gap-2">
                     <label>{attr.trait_type}:</label>
                     <label>{attr.value}</label>
                   </div>
@@ -63,7 +78,7 @@ const PurchaseModal = ({ property, onSubmit, onClose }: IModalProps) => {
                 onClick={onSubmit}
                 className="bg-violet-600 text-white rounded-lg p-2"
               >
-                Purchase
+                {actionName}
               </button>
             </div>
           </div>

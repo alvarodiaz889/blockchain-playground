@@ -7,20 +7,22 @@ import Escrow from "./abis/Escrow.json";
 import RealEstate from "./abis/RealEstate.json";
 // Config
 import config from "./config.json";
-import type { PropertyMetadata } from "./customTypes/Property";
+import type { PropertyMetadata, RoleType } from "./customTypes/Property";
 import PropertyList from "./components/PropertyList";
 import PurchaseModal from "./components/PurchaseModal";
 
 function App() {
-  const [account, setAccount] = useState<string | null>(null);
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [escrowContract, setEscrowContract] = useState<ethers.Contract | null>(
     null,
   );
   const [realEstateContract, setRealEstateContract] =
     useState<ethers.Contract | null>(null);
+
+  const [account, setAccount] = useState<string | null>(null);
   const [properties, setProperties] = useState<PropertyMetadata[]>([]);
   const [property, setProperty] = useState<PropertyMetadata | null>(null);
+  const [role, setRole] = useState<RoleType | null>(null);
 
   // Initialize the provider once on mount
   useEffect(() => {
@@ -104,6 +106,35 @@ function App() {
     };
   }, [provider]);
 
+  useEffect(() => {
+    const updateRole = async () => {
+      setRole(null);
+
+      if (escrowContract && account && property) {
+        const {
+          buyer: _buyer,
+          seller: _seller,
+          lender: _lender,
+          inspector: _inspector,
+        } = await escrowContract.propertyInfo(property.id);
+
+        const roleType =
+          account === _buyer
+            ? "buyer"
+            : account === _seller
+              ? "seller"
+              : account === _lender
+                ? "lender"
+                : account === _inspector
+                  ? "inspector"
+                  : null;
+
+        setRole(roleType);
+      }
+    };
+    updateRole();
+  }, [escrowContract, account, property]);
+
   // Use the stored provider to get the account when the button is clicked
   const handleConnect = async () => {
     if (!provider) return;
@@ -121,6 +152,7 @@ function App() {
     console.log("Selected Property =>", prop);
     setProperty(prop);
   };
+
   const handleSubmit = () => {};
 
   return (
@@ -131,6 +163,7 @@ function App() {
         property={property}
         onClose={() => setProperty(null)}
         onSubmit={handleSubmit}
+        role={role}
       />
     </div>
   );

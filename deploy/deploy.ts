@@ -1,12 +1,38 @@
 import hrdht from "hardhat";
 const { ethers } = hrdht;
 
+interface Property {
+  id: number;
+  propertyPrice: string;
+  downPayment: string;
+  accountBalance: string;
+  buyer: string;
+  seller: string;
+  lender: string;
+  inspector: string;
+  isListed: boolean;
+  inspectionPassed: boolean;
+}
+
 async function main() {
   const [deployer, buyer, seller, inspector, lender] =
     await ethers.getSigners();
 
+  const listingFee = ethers.parseEther("0.0001");
+  const precentage = 0.2;
+
+  const getRandomPrice = (): number => {
+    const minValue = 50;
+    const maxValue = 100;
+
+    return Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
+  };
+
   const deployerAddr = await deployer.getAddress();
+  const buyerAddr = await buyer.getAddress();
   const sellerAddr = await seller.getAddress();
+  const inspectorAddr = await inspector.getAddress();
+  const lenderAddr = await lender.getAddress();
 
   console.log("Deploying Real State contract...");
   // deploy contract real
@@ -43,6 +69,31 @@ async function main() {
     // The Seller must "Approve" the Escrow contract to take the NFT
     transaction = await realEstate.connect(seller).approve(escrowAddr, nftId);
     await transaction.wait();
+
+    // Now the list function can successfully "transferFrom"
+    const price = getRandomPrice();
+    const feeEth = price * precentage;
+    const downPayment = ethers.parseEther(feeEth.toFixed(18));
+
+    const property: Property = {
+      id: nftId,
+      accountBalance: "0",
+      downPayment,
+      propertyPrice: ethers.parseEther(price.toFixed(18)),
+      buyer: buyerAddr,
+      seller: sellerAddr,
+      inspector: inspectorAddr,
+      lender: lenderAddr,
+      isListed: false,
+      inspectionPassed: false,
+    };
+
+    transaction = await escrow
+      .connect(seller)
+      .list(property, { value: listingFee });
+    await transaction.wait();
+
+    console.log(`✅ Property Deployed`, property);
   }
 
   console.log(`✅ Deployment Done!`);
