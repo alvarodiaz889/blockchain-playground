@@ -69,9 +69,8 @@ function App() {
       console.log("totalSupply ==>", totalSupply);
 
       const balanceETH = await escrowCtr.getBalance();
-      const balance = balanceETH;
-      console.log("balance ==>", balance);
-      setBalance(balance);
+      console.log("balance ==>", balanceETH);
+      setBalance(balanceETH);
 
       const properties: PropertyMetadata[] = [];
       for (let nftId = 0; nftId < totalSupply; nftId++) {
@@ -230,6 +229,7 @@ function App() {
 
       const lendingAmount = price - downPayment;
       console.log("amount to lend ==>", lendingAmount);
+
       transaction = await contractWithSigner.depositLendingAmount(
         propertyInfo.id,
         { value: lendingAmount.toString() },
@@ -285,6 +285,8 @@ function App() {
       }
 
       setProperty(null);
+      const balanceETH = await escrowContract?.getBalance();
+      setBalance(balanceETH);
     } catch (error) {
       toast.error("Transaction failed. Check your wallet.", {
         id: loadingToast,
