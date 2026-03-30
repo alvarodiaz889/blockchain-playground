@@ -6,7 +6,7 @@ Deletes the cache/ folder.
 npx hardhat clean
 
 To deploy
-local: npx hardhat node to run local blockchain
+local: npx hardhat node (to run local blockchain)
 in terminal 2: npx hardhat run deploy/deploy.ts --network localhost
 web app: pnpm run dev
 

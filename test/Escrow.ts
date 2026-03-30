@@ -218,9 +218,8 @@ describe("Escrow", () => {
     });
 
     it("Updates property balance", async () => {
-      const { accountBalance: _accountBalance } = await escrow.propertyInfo(
-        nftId,
-      );
+      const { accountBalance: _accountBalance } =
+        await escrow.propertyInfo(nftId);
       expect(_accountBalance).to.be.equal(propertyPrice);
     });
   });

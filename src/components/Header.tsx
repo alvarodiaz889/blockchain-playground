@@ -2,10 +2,11 @@ import logo from "../assets/logo.svg";
 
 interface HeaderProps {
   account: string | null;
+  balance: number | null;
   onConnect: () => void;
 }
 
-const Header = ({ account, onConnect }: HeaderProps) => {
+const Header = ({ account, balance, onConnect }: HeaderProps) => {
   return (
     <div className="flex inline-flex justify-between p-6">
       <nav>
@@ -25,6 +26,9 @@ const Header = ({ account, onConnect }: HeaderProps) => {
         <img src={logo} width="80" height="60" alt="logo"></img>
         <label className="text-violet-600 text-3xl font-[700]">Millow</label>
       </div>
+      <label className="text-violet-600 font-[400]">
+        Balance: {balance} ETH
+      </label>
       {account ? (
         <button
           className="bg-violet-600 text-white rounded-lg p-2"

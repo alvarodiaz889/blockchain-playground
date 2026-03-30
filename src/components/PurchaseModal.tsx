@@ -4,24 +4,39 @@ import type { PropertyMetadata, RoleType } from "../customTypes/Property";
 interface IModalProps {
   property: PropertyMetadata | null;
   role: RoleType | null;
+  hasApproved: boolean;
   onSubmit: () => void;
   onClose: () => void;
 }
-const PurchaseModal = ({ property, role, onSubmit, onClose }: IModalProps) => {
+const PurchaseModal = ({
+  property,
+  role,
+  hasApproved,
+  onSubmit,
+  onClose,
+}: IModalProps) => {
   useEffect(() => {
-    console.log("role ==>", role);
-  }, [role]);
+    console.log("hasApproved =>", hasApproved);
+  }, []);
 
   const isOpen = property !== null;
   const actionName =
     role === "buyer"
-      ? "Buy Property"
+      ? hasApproved
+        ? "Property Already Bought!"
+        : "Buy Property"
       : role === "seller"
-        ? "Approve sell"
+        ? hasApproved
+          ? "Property Already Sold!"
+          : "Sell Property"
         : role === "inspector"
-          ? "Approve inspection"
+          ? hasApproved
+            ? "Property Already Approved!"
+            : "Approve inspection"
           : role === "lender"
-            ? "Deposit and Approve"
+            ? hasApproved
+              ? "Property Already Funded!"
+              : "Deposit and Approve"
             : "Not Authorized";
 
   // 1. Create a reference for the Modal Content box
@@ -76,7 +91,8 @@ const PurchaseModal = ({ property, role, onSubmit, onClose }: IModalProps) => {
               </button>
               <button
                 onClick={onSubmit}
-                className="bg-violet-600 text-white rounded-lg p-2"
+                className={`${hasApproved ? "bg-slate-600" : "bg-violet-600"} text-white rounded-lg p-2`}
+                // disabled={hasApproved}
               >
                 {actionName}
               </button>
