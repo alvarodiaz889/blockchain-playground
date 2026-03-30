@@ -92,7 +92,7 @@ const PurchaseModal = ({
               <button
                 onClick={onSubmit}
                 className={`${hasApproved ? "bg-slate-600" : "bg-violet-600"} text-white rounded-lg p-2`}
-                // disabled={hasApproved}
+                disabled={hasApproved}
               >
                 {actionName}
               </button>

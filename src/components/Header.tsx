@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import logo from "../assets/logo.svg";
 
 interface HeaderProps {
@@ -7,6 +8,11 @@ interface HeaderProps {
 }
 
 const Header = ({ account, balance, onConnect }: HeaderProps) => {
+  const getBalance = () => {
+    const ethValue = balance ? ethers.formatUnits(balance, "ether") : "0";
+    return parseFloat(ethValue).toFixed(3) + " ETH";
+  };
+
   return (
     <div className="flex inline-flex justify-between p-6">
       <nav>
@@ -27,7 +33,7 @@ const Header = ({ account, balance, onConnect }: HeaderProps) => {
         <label className="text-violet-600 text-3xl font-[700]">Millow</label>
       </div>
       <label className="text-violet-600 font-[400]">
-        Balance: {balance} ETH
+        Balance: {getBalance()}
       </label>
       {account ? (
         <button

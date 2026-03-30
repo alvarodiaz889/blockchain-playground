@@ -69,7 +69,7 @@ function App() {
       console.log("totalSupply ==>", totalSupply);
 
       const balanceETH = await escrowCtr.getBalance();
-      const balance = Number(ethers.formatEther(balanceETH));
+      const balance = balanceETH;
       console.log("balance ==>", balance);
       setBalance(balance);
 
@@ -220,18 +220,19 @@ function App() {
     const propertyInfo: Property = await escrowContract.propertyInfo(
       property.id,
     );
-    const balance = Number(ethers.formatEther(propertyInfo.accountBalance));
-    const downPayment = Number(ethers.formatEther(propertyInfo.downPayment));
-    const price = Number(ethers.formatEther(propertyInfo.propertyPrice));
+    const balance = propertyInfo.accountBalance;
+    const downPayment = propertyInfo.downPayment;
+    const price = propertyInfo.propertyPrice;
 
     if (balance >= downPayment) {
       let transaction = await contractWithSigner.approveSale(property.id);
       await transaction.wait();
 
       const lendingAmount = price - downPayment;
+      console.log("amount to lend ==>", lendingAmount);
       transaction = await contractWithSigner.depositLendingAmount(
         propertyInfo.id,
-        { value: ethers.parseEther(lendingAmount.toFixed(18)) },
+        { value: lendingAmount.toString() },
       );
 
       toast.success("Property lent successfully!", { id: toastId });

@@ -14,9 +14,9 @@ export interface PropertyMetadata {
 
 export interface Property {
   id: number;
-  propertyPrice: string;
-  downPayment: string;
-  accountBalance: string;
+  propertyPrice: bigint;
+  downPayment: bigint;
+  accountBalance: bigint;
   buyer: string;
   seller: string;
   lender: string;
