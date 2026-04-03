@@ -30,12 +30,15 @@ function App() {
   const [role, setRole] = useState<RoleType | null>(null);
   const [hasApproved, setHasApproved] = useState(false);
   const [balance, setBalance] = useState(0);
+  const [ethProvider, setEthProvider] = useState<any | undefined>(undefined);
 
   // Initialize the provider once on mount
   useEffect(() => {
-    if (window.ethereum) {
-      const browserProvider = new ethers.BrowserProvider(window.ethereum);
+    const ethProvider = (window as any).ethereum;
+    if (ethProvider) {
+      const browserProvider = new ethers.BrowserProvider(ethProvider);
       setProvider(browserProvider);
+      setEthProvider(ethProvider);
     } else {
       console.log("Metamask is not installed!");
     }
@@ -107,15 +110,15 @@ function App() {
     };
 
     // Attach listeners
-    window.ethereum.on("accountsChanged", handleAccountsChanged);
-    window.ethereum.on("chainChanged", handleChainChanged);
+    ethProvider.on("accountsChanged", handleAccountsChanged);
+    ethProvider.on("chainChanged", handleChainChanged);
 
     // CLEANUP: Remove them if the component unmounts or provider changes
     return () => {
-      window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
-      window.ethereum.removeListener("chainChanged", handleChainChanged);
+      ethProvider.removeListener("accountsChanged", handleAccountsChanged);
+      ethProvider.removeListener("chainChanged", handleChainChanged);
     };
-  }, [provider]);
+  }, [ethProvider, provider]);
 
   // Use the stored provider to get the account when the button is clicked
   const handleConnect = async () => {
@@ -165,18 +168,12 @@ function App() {
     [escrowContract, account],
   );
 
-  const handleBuying = async (toastId: string) => {
-    if (!escrowContract || !provider || !account || !property) {
-      console.error("Missing dependencies for transaction");
-      return;
-    }
-
-    const signer = await provider.getSigner();
-    const propertyInfo: Property = await escrowContract.propertyInfo(
-      property.id,
-    );
-    const contractWithSigner = escrowContract.connect(signer);
-
+  const handleBuying = async (
+    contractWithSigner: any,
+    property: PropertyMetadata,
+    propertyInfo: Property,
+    onSuccess: () => void,
+  ) => {
     let transaction = await contractWithSigner.depositDownPayment(property.id, {
       value: propertyInfo.downPayment,
     });
@@ -186,39 +183,30 @@ function App() {
     transaction = await contractWithSigner.approveSale(property.id);
     await transaction.wait();
 
-    toast.success("Property bought successfully!", { id: toastId });
+    onSuccess();
   };
 
-  const handleInspecting = async (toastId: string) => {
-    if (!escrowContract || !provider || !account || !property) {
-      console.error("Missing dependencies for transaction");
-      return;
-    }
-
-    const signer = await provider.getSigner();
-    const contractWithSigner = escrowContract.connect(signer);
-
+  const handleInspecting = async (
+    contractWithSigner: any,
+    property: PropertyMetadata,
+    onSuccess: () => void,
+  ) => {
     const transaction = await contractWithSigner.updateInspectionStatus(
       property.id,
       true,
     );
     await transaction.wait();
 
-    toast.success("Property inpection approved successfully!", { id: toastId });
+    onSuccess();
   };
 
-  const handleLending = async (toastId: string) => {
-    if (!escrowContract || !provider || !account || !property) {
-      toast.error("Operation can't be performed", { id: toastId });
-      return;
-    }
-
-    const signer = await provider.getSigner();
-    const contractWithSigner = escrowContract.connect(signer);
-
-    const propertyInfo: Property = await escrowContract.propertyInfo(
-      property.id,
-    );
+  const handleLending = async (
+    contractWithSigner: any,
+    property: PropertyMetadata,
+    propertyInfo: Property,
+    onSuccess: () => void,
+    onError: () => void,
+  ) => {
     const balance = propertyInfo.accountBalance;
     const downPayment = propertyInfo.downPayment;
     const price = propertyInfo.propertyPrice;
@@ -235,28 +223,24 @@ function App() {
         { value: lendingAmount.toString() },
       );
 
-      toast.success("Property lent successfully!", { id: toastId });
+      onSuccess();
     } else {
-      toast.error("No enough funds in contract", { id: toastId });
+      onError();
     }
   };
 
-  const handleSelling = async (toastId: string) => {
-    if (!escrowContract || !provider || !account || !property) {
-      console.error("Missing dependencies for transaction");
-      return;
-    }
-
-    const signer = await provider.getSigner();
-    const contractWithSigner = escrowContract.connect(signer);
-
+  const handleSelling = async (
+    contractWithSigner: any,
+    property: PropertyMetadata,
+    onSuccess: () => void,
+  ) => {
     let transaction = await contractWithSigner.approveSale(property.id);
     await transaction.wait();
 
     transaction = await contractWithSigner.finalizeSale(property.id);
     await transaction.wait();
 
-    toast.success("Property sold successfully!", { id: toastId });
+    onSuccess();
   };
 
   const handleSubmit = async () => {
@@ -268,21 +252,62 @@ function App() {
     );
 
     try {
+      if (!escrowContract || !provider || !account || !property) {
+        toast.error("Operation can't be performed", { id: loadingToast });
+        return;
+      }
+
+      const signer = await provider.getSigner();
+      const contractWithSigner = escrowContract.connect(signer);
+      const propertyInfo: Property = await escrowContract.propertyInfo(
+        property.id,
+      );
+
+      let action: Promise<void> | null = null;
       if (role === "buyer") {
-        await handleBuying(loadingToast);
+        action = handleBuying(contractWithSigner, property, propertyInfo, () =>
+          toast.success("Property bought successfully!", {
+            id: loadingToast,
+          }),
+        );
       }
 
       if (role === "inspector") {
-        await handleInspecting(loadingToast);
+        action = handleInspecting(contractWithSigner, property, () => {
+          toast.success("Property bought successfully!", {
+            id: loadingToast,
+          });
+        });
       }
 
       if (role === "lender") {
-        await handleLending(loadingToast);
+        action = handleLending(
+          contractWithSigner,
+          property,
+          propertyInfo,
+          () =>
+            toast.success("Property lent successfully!", {
+              id: loadingToast,
+            }),
+          () =>
+            toast.error("No enough funds in contract", { id: loadingToast }),
+        );
       }
 
       if (role === "seller") {
-        await handleSelling(loadingToast);
+        action = handleSelling(contractWithSigner, property, () => {
+          toast.success("Property sold successfully!", {
+            id: loadingToast,
+          });
+        });
       }
+
+      if (!action) {
+        toast.error("Invalid operation", { id: loadingToast });
+        return;
+      }
+
+      await action;
 
       setProperty(null);
       const balanceETH = await escrowContract?.getBalance();
