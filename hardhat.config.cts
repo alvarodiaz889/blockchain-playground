@@ -19,6 +19,10 @@ const config: HardhatUserConfig = {
       hardfork: "cancun",
     },
   },
+  typechain: {
+    outDir: "typechain-types", // Where your types will live
+    target: "ethers-v6",
+  },
 };
 
 export default config;

@@ -1,6 +1,5 @@
 import { expect } from "chai";
-import hrdht from "hardhat";
-const { ethers } = hrdht;
+import { ethers } from "hardhat";
 
 // Senior Tip: ethers v6 uses native BigInt.
 // This helper converts a number string to Wei.
